@@ -47,8 +47,6 @@ The dataset also includes a cost-sensitive framing: misclassifying a bad credit 
 
 The dataset is useful for a public governance simulation, but it is not representative of modern credit decisioning. 
 
-Main limitations: the dataset is small, historical, weakly documented, lacks timestamps, longitudinal repayment, affordability, income, complaint and override data, and includes sensitive or proxy-sensitive variables requiring careful treatment.
-
 These limitations are treated as governance findings, not ignored.
 
 ---
@@ -118,17 +116,3 @@ This project demonstrates the ability to:
 - design human oversight controls;
 - define practical monitoring requirements;
 - produce governance artefacts suitable for a regulated financial services context.
-
----
-
-## Status
-
-Current status: **in development**
-
----
-
-## Disclaimer
-
-This project is for educational and portfolio purposes only.
-
-It uses a public historical dataset and a simulated banking scenario. It should not be used for real credit decisions, regulatory submissions, or production deployment.
