@@ -57,7 +57,7 @@ The dataset contains:
 | Test set size | 300 |
 | Test bad-risk rate | 30.0% |
 
-Main dataset limitation: the dataset is small, historical, weakly documented, lacks timestamps, longitudinal repayment, affordability, income, complaint and override data, and includes sensitive or proxy-sensitive variables requiring careful treatment.
+Dataset limitation: the dataset is small, historical, weakly documented, lacks timestamps, longitudinal repayment, affordability, income, complaint and override data, and includes sensitive or proxy-sensitive variables requiring careful treatment.
 
 The selected model is a logistic regression classifier. At the selected threshold of `0.25`, the model flags **47.3%** of test applicants as bad risk / high risk.
 
