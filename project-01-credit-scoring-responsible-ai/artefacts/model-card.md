@@ -42,7 +42,7 @@ The model must not be used for:
 - affordability assessment;
 - pricing or limit assignment;
 - fraud detection;
-- collections or debt recovery.
+- collections or debt recovery
 
 ---
 
