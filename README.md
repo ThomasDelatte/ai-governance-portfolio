@@ -58,9 +58,9 @@ Each project can be read independently as a standalone governance case study.
 
 The projects are designed to be standalone, but they also build a coherent portfolio narrative:
 
-1. **Project 01** shows governance of a traditional ML model.
-2. **Project 02** extends the governance approach to GenAI and RAG systems.
-3. **Project 03** moves from individual systems to enterprise-level AI governance readiness.
+1. **Project 01** shows governance of a traditional ML model
+2. **Project 02** extends the governance approach to GenAI and RAG systems
+3. **Project 03** moves from individual systems to enterprise-level AI governance readiness
 
 ---
 
