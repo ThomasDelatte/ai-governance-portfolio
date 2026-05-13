@@ -113,6 +113,27 @@ project-01-credit-scoring-responsible-ai/
 
 ---
 
+## Current Model Result
+
+The current candidate model is a calibrated logistic regression.
+
+On the held-out test set:
+
+| Metric | Value |
+|---|---:|
+| ROC AUC | 0.780 |
+| Average precision | 0.612 |
+| Brier score | 0.165 |
+| Selected threshold | 0.16 |
+
+The selected threshold was chosen on the validation set using the German Credit asymmetric cost assumption: false negatives cost 5 and false positives cost 1.
+
+At the default threshold of 0.50, the model misses 34 bad-risk applicants. At the selected threshold of 0.16, this falls to 7, but false positives increase from 16 to 90.
+
+This result is treated as a governance finding, not as a final deployment recommendation. The selected threshold requires fairness testing, explainability review and operational assessment before any approval decision.
+
+---
+
 ## Methodological Approach
 
 The project follows a simple Responsible AI assurance workflow:
