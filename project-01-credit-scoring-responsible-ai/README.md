@@ -8,11 +8,38 @@ The project is based on the Statlog German Credit Dataset and is framed as a sim
 
 ---
 
+## Executive Summary
+
+A calibrated logistic regression model was developed to predict bad credit risk.
+
+The model shows reasonable baseline discrimination on the held-out test set:
+
+| Metric | Value |
+|---|---:|
+| ROC AUC | 0.780 |
+| Average precision | 0.612 |
+| Brier score | 0.165 |
+
+The main finding is not model performance. The main finding is the **governance impact of threshold selection**.
+
+Using the German Credit asymmetric cost assumption, where false negatives cost 5 and false positives cost 1, the selected cost-sensitive threshold is `0.16`.
+
+This threshold reduces missed bad-risk applicants but creates a much higher high-risk flag rate:
+
+| Threshold | High-risk flag rate | False positives | False negatives | Interpretation |
+|---:|---:|---:|---:|---|
+| 0.50 | 21.0% | 16 | 34 | Conservative flagging, but many bad-risk applicants missed |
+| 0.16 | 71.5% | 90 | 7 | Better bad-risk detection, but high customer-friction risk |
+
+The model should therefore **not** be used for fully automated rejection. It may be considered for further controlled testing as a decision-support tool, subject to human review, subgroup monitoring, threshold review and feature governance.
+
+---
+
 ## Project Objective
 
-The objective is to demonstrate how technical machine learning evidence can be translated into governance-relevant artefacts.
+The project demonstrates how technical machine learning evidence can be translated into governance-relevant artefacts.
 
-The project covers:
+It covers:
 
 - model development and performance evaluation;
 - cost-sensitive threshold selection;
@@ -21,15 +48,6 @@ The project covers:
 - explainability review;
 - AI risk and control documentation;
 - testing evidence for Responsible AI review.
-
-The intended audience is hiring managers and reviewers for roles in:
-
-- Responsible AI Engineering;
-- AI Governance;
-- AI Risk Management;
-- Model Governance;
-- AI Assurance;
-- AI Compliance Engineering.
 
 ---
 
@@ -54,8 +72,8 @@ This case study assumes that the model would not be used for fully automated rej
 | Sensitive or subgroup attributes tested | Gender, age group, foreign worker status |
 | Performance metrics | ROC AUC, average precision, Brier score, accuracy, precision, recall, confusion matrix |
 | Business metric | Cost-sensitive error analysis using the German Credit cost matrix |
-| Fairness metrics | Selection rate, disparate impact, false positive rate gap, false negative rate gap, equal opportunity difference |
-| Explainability | Feature importance and/or SHAP analysis |
+| Fairness metrics | Favourable outcome rate, high-risk flag rate, disparate impact screen, false positive rate gap, false negative rate gap |
+| Explainability | Permutation importance and proxy-sensitive feature review |
 | Governance outputs | Model card, fairness assessment, AI risk-control matrix, testing summary |
 
 ---
@@ -103,34 +121,80 @@ project-01-credit-scoring-responsible-ai/
 
 | Area | Status |
 |---|---|
-| Repository structure | In progress |
-| Notebook 01 — model development and thresholding | In progress |
-| Notebook 02 — fairness, explainability and testing | Not started |
-| Model card | Placeholder |
-| Fairness assessment | Placeholder |
-| AI risk and controls matrix | Placeholder |
-| Testing summary | Placeholder |
+| Repository structure | Complete for V1 |
+| Notebook 01 — model development and thresholding | Complete |
+| Notebook 02 — fairness, explainability and testing | Complete |
+| Model card | To be completed |
+| Fairness assessment | To be completed |
+| AI risk and controls matrix | To be completed |
+| Testing summary | To be completed |
 
 ---
 
-## Current Model Result
+## Responsible AI Findings
 
-The current candidate model is a calibrated logistic regression.
+### 1. Threshold selection is the main governance issue
 
-On the held-out test set:
+The selected threshold was chosen on the validation set using the German Credit asymmetric cost assumption:
 
-| Metric | Value |
+| Error type | Interpretation | Assumed cost |
+|---|---|---:|
+| False negative | Bad credit risk classified as good | 5 |
+| False positive | Good credit risk classified as bad | 1 |
+
+This cost-sensitive approach reduces missed bad-risk applicants, but the selected threshold `0.16` flags 71.5% of applicants as high risk.
+
+This is not treated as a deployment recommendation. It is treated as a governance finding.
+
+![Cost-sensitive threshold curve](outputs/figures/cost_sensitive_threshold_curve_validation.png)
+
+---
+
+### 2. Fairness review identifies age and foreign worker status as review triggers
+
+Fairness testing was performed on:
+
+- gender group;
+- age group;
+- foreign worker status.
+
+The selected threshold created review triggers for age group and foreign worker status.
+
+Key findings:
+
+| Finding | Severity |
+|---|---|
+| Cost-sensitive threshold creates high flagging rate | High |
+| Age-group disparity at default threshold | Medium |
+| Foreign-worker-status disparity at default threshold | Medium |
+| Age-group disparity at selected threshold | High |
+| Foreign-worker-status disparity at selected threshold | High |
+| Main model drivers require business and proxy review | Medium |
+
+The foreign-worker-status finding should be interpreted carefully because the subgroup size is small. It is a high-priority review trigger, not a definitive legal conclusion.
+
+![High-risk flag rate by age group](outputs/figures/high_risk_flag_rate_age_group.png)
+
+---
+
+### 3. Explainability review shows mostly credit-relevant drivers, with proxy-sensitive concerns
+
+The top global drivers based on permutation importance were:
+
+| Feature | Importance |
 |---|---:|
-| ROC AUC | 0.780 |
-| Average precision | 0.612 |
-| Brier score | 0.165 |
-| Selected threshold | 0.16 |
+| checking_status | 0.0916 |
+| credit_history | 0.0322 |
+| credit_amount | 0.0307 |
+| installment_commitment | 0.0195 |
+| duration | 0.0179 |
+| purpose | 0.0150 |
+| savings_status | 0.0045 |
+| foreign_worker | 0.0040 |
 
-The selected threshold was chosen on the validation set using the German Credit asymmetric cost assumption: false negatives cost 5 and false positives cost 1.
+Most top drivers are broadly credit-relevant. However, `foreign_worker` appears among the top drivers and should be reviewed as a proxy-sensitive feature before operational use.
 
-At the default threshold of 0.50, the model misses 34 bad-risk applicants. At the selected threshold of 0.16, this falls to 7, but false positives increase from 16 to 90.
-
-This result is treated as a governance finding, not as a final deployment recommendation. The selected threshold requires fairness testing, explainability review and operational assessment before any approval decision.
+![Permutation importance](outputs/figures/permutation_importance_top_features.png)
 
 ---
 
@@ -172,42 +236,60 @@ The project is structured around the following questions:
 
 ---
 
-## Cost-Sensitive Thresholding
+## Preliminary Governance Recommendation
 
-The German Credit Dataset includes an asymmetric cost framing.
+The candidate model is suitable for further controlled testing, not direct deployment.
 
-For this case study, the following assumption is used:
+Recommended position:
 
-| Error type | Interpretation | Assumed cost |
-|---|---|---:|
-| False negative | Bad credit risk classified as good | 5 |
-| False positive | Good credit risk classified as bad | 1 |
+~~~text
+Approve for controlled testing only.
+Do not approve for fully automated rejection.
+~~~
 
-The selected threshold is therefore not treated as a purely technical parameter. It is a governance-relevant decision that affects:
+Required conditions before any operational use:
 
-- credit risk exposure;
-- customer exclusion risk;
-- fairness outcomes;
-- human review workload;
-- business risk appetite.
+- use as decision-support only;
+- no fully automated rejection;
+- human review for adverse or borderline cases;
+- documented reason codes;
+- subgroup performance monitoring;
+- threshold review before approval;
+- review of proxy-sensitive features;
+- periodic fairness reassessment.
 
-The selected threshold will be documented in the model card and testing summary after Notebook 01 is completed.
+The main issue is not only model performance. The selected cost-sensitive threshold improves bad-risk detection, but creates high customer-friction risk and fairness review triggers.
 
 ---
 
-## Fairness Testing Scope
+## Mitigation Position
 
-Fairness testing will focus on subgroup outcomes using attributes available or derivable from the dataset:
+No algorithmic mitigation is applied automatically in V1.
 
-| Attribute | Rationale |
+This is intentional. The project follows a diagnosis-first approach:
+
+~~~text
+diagnose subgroup and error disparities
+      ↓
+identify material governance risks
+      ↓
+select proportionate controls or mitigation
+      ↓
+re-test performance, fairness and operational impact
+~~~
+
+Mitigation options considered:
+
+| Option | When relevant |
 |---|---|
-| Gender | Relevant for detecting potential disparate treatment or impact in credit outcomes |
-| Age group | Relevant because age can influence credit history, employment stability and financial access |
-| Foreign worker status | Relevant as a potential proxy for nationality, migration status or financial exclusion risk |
+| Threshold adjustment | If the operating threshold creates excessive customer friction or subgroup disparity |
+| Reweighing / sample weighting | If subgroup disadvantage is confirmed and stable |
+| Feature review | If top drivers are sensitive or proxy-sensitive |
+| Post-processing constraints | If error rates differ sharply across groups |
+| Human review | If automated flagging is too aggressive for direct action |
+| Monitoring | If the model proceeds to pilot |
 
-These attributes are used for Responsible AI testing in a simulated portfolio context. They are not presented as a complete legal discrimination assessment.
-
-The project also assumes that removing protected attributes from the model is not sufficient by itself. Other variables may act as proxies, so the assessment focuses on actual subgroup outcomes and error patterns.
+For this V1, the main recommended controls are controlled use, human review, subgroup monitoring and threshold governance.
 
 ---
 
@@ -229,7 +311,7 @@ The analysis links technical ML work to governance controls:
 
 ---
 
-## Planned Artefact Logic
+## Artefacts
 
 The artefacts are intentionally limited to a small number of high-signal documents.
 
@@ -239,28 +321,6 @@ The artefacts are intentionally limited to a small number of high-signal documen
 | Fairness assessment | Are there material subgroup disparities and what do they imply? |
 | AI risk and controls | What are the main AI risks and what controls would reduce them? |
 | Testing summary | Is the model ready for limited use, further testing or rejection? |
-
----
-
-## Preliminary Governance Recommendation
-
-The final recommendation will be completed after the notebooks are executed.
-
-Expected recommendation format:
-
-~~~text
-Conditionally approve / do not approve / approve for testing only
-~~~
-
-Likely deployment conditions to assess:
-
-- use as decision-support only;
-- human review for adverse or borderline cases;
-- documented reason codes;
-- subgroup performance monitoring;
-- periodic fairness reassessment;
-- threshold review after material drift;
-- no fully automated rejection without additional controls.
 
 ---
 
@@ -293,6 +353,7 @@ Main limitations:
 - the dataset does not represent a real modern banking portfolio;
 - protected attributes are limited and imperfect;
 - fairness analysis is illustrative, not a legal conclusion;
+- subgroup findings are sensitive to small sample sizes;
 - operational controls are proposed conceptually, not implemented in production;
 - results should not be interpreted as a deployable credit scoring system.
 
@@ -307,7 +368,7 @@ This project is informed by public work on:
 - credit scoring fairness analysis using the German Credit Dataset;
 - cost-sensitive evaluation of credit risk models;
 - fairness metrics such as disparate impact and equal opportunity;
-- explainability methods such as SHAP and feature importance;
+- explainability methods such as permutation importance and SHAP-style reasoning;
 - Responsible AI governance artefacts such as model cards, risk assessments and testing summaries;
 - AI governance frameworks including the EU AI Act, ISO/IEC 42001 and the NIST AI Risk Management Framework.
 
@@ -318,5 +379,3 @@ Detailed references will be added as the artefacts are completed.
 ## Disclaimer
 
 This repository is a personal portfolio project.
-
-It is not legal advice, financial advice, regulatory advice or a production-ready model governance package. The scenario, controls and recommendations are simulated for educational and professional demonstration purposes.
