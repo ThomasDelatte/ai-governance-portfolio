@@ -1,0 +1,7 @@
+threshold,attribute,severity,main_reasons,min_group_size,favourable_di_ratio,high_risk_flag_rate_gap,false_positive_rate_gap,false_negative_rate_gap
+default_0_50,age_group,Medium,false_negative_rate_gap above 0.20,37,0.8671875,0.11486486486486486,0.045138888888888895,0.34920634920634924
+default_0_50,foreign_worker_group,Medium,false_negative_rate_gap above 0.20; small subgroup size: minimum n = 6,6,0.9463917525773196,0.04467353951890035,0.11851851851851852,0.576271186440678
+default_0_50,gender_group,Low,no material review trigger,61,0.9358899297423887,0.051657035027715514,0.04533136240453313,0.02499999999999991
+selected_0.16,age_group,High,favourable outcome disparate impact ratio below 0.80; false_negative_rate_gap above 0.20,37,0.6035714285714286,0.14230769230769225,0.15404040404040398,0.2357142857142857
+selected_0.16,foreign_worker_group,High,favourable outcome disparate impact ratio below 0.80; high_risk_flag_rate_gap above 0.20; false_positive_rate_gap above 0.20; small subgroup size: minimum n = 6,6,0.5567010309278351,0.22164948453608246,0.2518518518518519,0.11864406779661017
+selected_0.16,gender_group,Low,no material review trigger,61,0.813817330210773,0.05625663403703263,0.022172949002217335,0.09999999999999999

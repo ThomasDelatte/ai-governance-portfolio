@@ -1,0 +1,16 @@
+feature,importance_mean,importance_std,review_note
+checking_status,0.09161904761904757,0.027923415267144626,"Generally credit-relevant, but still requires reason-code and proportionality review."
+credit_history,0.032238095238095246,0.0164501066583258,"Generally credit-relevant, but still requires reason-code and proportionality review."
+credit_amount,0.030654761904761886,0.00706048736698893,"Generally credit-relevant, but still requires reason-code and proportionality review."
+installment_commitment,0.019547619047619046,0.010828334796593592,Review for business relevance and potential proxy effect.
+duration,0.01785714285714283,0.008331292267049692,"Generally credit-relevant, but still requires reason-code and proportionality review."
+purpose,0.014999999999999947,0.006588186018270742,Review for business relevance and potential proxy effect.
+savings_status,0.0044523809523809525,0.00822552715952934,"Generally credit-relevant, but still requires reason-code and proportionality review."
+foreign_worker,0.004023809523809496,0.0017364636830204535,Proxy-sensitive: may relate to nationality/migration status; requires legal and fairness review.
+age,0.003273809523809501,0.001376274919142694,Sensitive or legally constrained in many credit contexts; requires explicit policy review.
+own_telephone,0.0015238095238095273,0.003922722919355997,Review for business relevance and potential proxy effect.
+other_parties,0.0005357142857142505,0.003629000255875295,Review for business relevance and potential proxy effect.
+personal_status,0.0005357142857142394,0.010506348636800718,Sensitive/proxy-sensitive: should not be used without specific legal and governance review.
+housing,-0.00032142857142860584,0.004766084475173489,Credit-relevant proxy candidate; check whether it drives unequal outcomes.
+property_magnitude,-0.0014761904761904864,0.005839452572733692,Review for business relevance and potential proxy effect.
+employment,-0.00279761904761906,0.004666681851287233,Credit-relevant but may create indirect socioeconomic disparities; monitor subgroup effects.

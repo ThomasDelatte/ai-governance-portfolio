@@ -1,0 +1,17 @@
+{
+  "candidate_model": "logistic_regression_C1_calibrated_sigmoid",
+  "selected_base_model": "logistic_regression_C1",
+  "selected_threshold": 0.16,
+  "threshold_basis": "cost-sensitive analysis on validation set using German Credit asymmetric cost assumption",
+  "positive_class": "bad credit risk",
+  "cost_false_negative": 5,
+  "cost_false_positive": 1,
+  "train_set_size": 600,
+  "validation_set_size": 200,
+  "test_set_size": 200,
+  "test_bad_risk_rate": 0.3,
+  "test_roc_auc": 0.7795238095238095,
+  "test_average_precision": 0.6122322191698928,
+  "test_brier_score": 0.1645090087127678,
+  "selection_reason": "Selected logistic regression because it was within 0.02 ROC AUC of the best validation model and is easier to explain."
+}
