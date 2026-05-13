@@ -1,282 +1,310 @@
-# Model Card — Credit Scoring Decision-Support Model
+# Model Card — Credit Risk Decision-Support Model
 
 ## 1. Model Overview
 
 | Item | Description |
 |---|---|
-| Project | Responsible AI Governance for Credit Scoring |
-| Model | Logistic regression classifier |
-| Use case | Credit risk decision support |
-| Dataset | Statlog German Credit Data |
-| Target | Predict whether an applicant is a bad credit risk |
-| Positive class | `bad_risk = 1` |
-| Selected threshold | `0.25` |
-| Status | Portfolio simulation |
-| Production-ready | No |
-
-This model card documents a simulated credit scoring decision-support model. It is intended to show how model performance, fairness, explainability, threshold selection and governance controls can be documented in a regulated financial services context.
+| Model name | Credit risk decision-support model |
+| Model type | Calibrated logistic regression |
+| Candidate model | `logistic_regression_C1_calibrated_sigmoid` |
+| Use case | Credit risk decision support for loan application review |
+| Dataset | Statlog German Credit Dataset |
+| Positive class | Bad credit risk |
+| Selected threshold | `0.16` |
+| Threshold basis | Cost-sensitive threshold selected on validation set |
+| Intended users | Credit risk, model governance, Responsible AI, compliance and business review teams |
+| Status | Portfolio case study — not production-ready |
 
 ---
 
 ## 2. Intended Use
 
-The model is designed to support credit officers in reviewing personal credit applications.
+The model is designed as a **decision-support tool** for a simulated credit risk review process.
 
-In the simulated scenario:
+It predicts whether an applicant is likely to represent a higher credit risk. The model output is a probability score for `bad credit risk`.
 
-- the model estimates the probability that an applicant represents a bad credit risk;
-- the output is used as one input in a broader credit assessment;
-- final credit decisions remain human-led;
-- decisions remain subject to credit policy, affordability checks, legal requirements and customer context;
-- model outputs must not be used as the sole basis for approval or rejection.
+The model is intended to support questions such as:
 
-### Out of Scope
+- which applications may require closer review;
+- how different thresholds change business and customer impact;
+- whether model outcomes differ across relevant subgroups;
+- what controls would be needed before any operational use.
 
-The model must not be used for:
+The model is **not** intended to make fully automated credit approval or rejection decisions.
 
-- fully automated credit decisions;
+---
+
+## 3. Non-Intended Use
+
+This model should not be used for:
+
+- fully automated credit rejection;
 - real lending decisions;
+- customer-facing credit scoring;
+- legal or regulatory compliance conclusions;
 - production deployment;
-- regulatory submissions;
-- customer-facing adverse action notices;
-- affordability assessment;
-- pricing or limit assignment;
-- fraud detection;
-- collections or debt recovery
+- individual creditworthiness assessment;
+- benchmarking modern credit risk systems.
+
+The dataset is small, dated and simplified. The model is useful for Responsible AI governance demonstration, not for commercial credit scoring.
 
 ---
 
-## 3. Dataset
+## 4. Dataset
 
-| Item | Description |
+The project uses the **Statlog German Credit Dataset**.
+
+The target variable is converted as follows:
+
+| Original outcome | Model target |
+|---|---:|
+| Good credit risk | `0` |
+| Bad credit risk | `1` |
+
+The following subgroup attributes are used for Responsible AI testing:
+
+| Attribute | Source / derivation | Use |
+|---|---|---|
+| Gender group | Derived from `personal_status` | Fairness testing |
+| Age group | Derived from `age` | Fairness testing |
+| Foreign worker status | Dataset feature | Fairness and proxy-sensitive feature review |
+
+These subgroup attributes are used for testing and governance review. They are not treated as a complete legal discrimination assessment.
+
+---
+
+## 5. Model Development Approach
+
+A small set of candidate models was tested:
+
+- logistic regression variants;
+- random forest variants;
+- histogram gradient boosting.
+
+The final candidate model is a calibrated logistic regression.
+
+This was selected because it offered a good balance between:
+
+- predictive performance;
+- interpretability;
+- governance reviewability;
+- ease of explanation;
+- suitability for a Responsible AI case study.
+
+The model was developed using a train / validation / test split:
+
+| Split | Purpose |
 |---|---|
-| Source | UCI Machine Learning Repository |
-| Dataset | Statlog German Credit Data |
-| Observations | 1,000 |
-| Input features | 20 |
-| Target distribution | 700 good credit risks / 300 bad credit risks |
-| Bad-risk rate | 30.0% |
-| Missing values | None detected in the loaded file |
-| Feature types | Mixed categorical and numerical variables |
+| Training set | Fit candidate models |
+| Validation set | Compare models and select threshold |
+| Test set | Final held-out evaluation |
 
-The dataset includes credit history, checking account status, credit amount, duration, savings, employment, age, housing, job, personal status/sex and foreign worker status.
-
-Main limitation: the dataset is small, historical, weakly documented, lacks timestamps, longitudinal repayment, affordability, income, complaint and override data, and includes sensitive or proxy-sensitive variables requiring careful treatment.
+The selected operating threshold was chosen on the validation set, then evaluated on the held-out test set.
 
 ---
 
-## 4. Sensitive and Proxy-Sensitive Variables
+## 6. Performance Summary
 
-The dataset includes variables that require explicit governance treatment:
-
-| Variable | Governance concern |
-|---|---|
-| `personal_status_sex` | Encodes sex and marital/personal status in a combined variable |
-| `age_years` | Age can be legally sensitive or regulated depending on context |
-| `foreign_worker` | May proxy nationality, migration status or ethnic origin |
-| `housing` | May proxy socioeconomic status and wealth |
-| `job` | May proxy socioeconomic status, education or labour market segmentation |
-| `property` | Wealth/security proxy |
-| `telephone` | Outdated socioeconomic proxy |
-
-These variables are useful for fairness analysis in this portfolio project. Their use in a real credit model would require legal basis, necessity assessment, proportionality review and formal approval.
-
----
-
-## 5. Model Development Summary
-
-The notebook workflow used:
-
-1. governance-oriented data exploration;
-2. train/test split;
-3. baseline model comparison;
-4. selection of a candidate model;
-5. cost-sensitive threshold analysis;
-6. fairness and explainability review.
-
-Train/test split:
-
-| Split | Rows | Bad-risk rate |
-|---|---:|---:|
-| Train | 700 | 30.0% |
-| Test | 300 | 30.0% |
-
-Candidate model selection was based on highest ROC-AUC on the holdout test set. This is acceptable for the portfolio simulation, but would be insufficient for production model approval.
-
----
-
-## 6. Model Performance
-
-### Baseline Comparison at Threshold 0.50
-
-| Model | ROC-AUC | Average precision | Brier score | Accuracy | Bad-risk precision | Bad-risk recall |
-|---|---:|---:|---:|---:|---:|---:|
-| Dummy stratified | 0.585 | 0.350 | 0.350 | 0.650 | 0.418 | 0.422 |
-| Logistic regression | 0.801 | 0.645 | 0.157 | 0.783 | 0.676 | 0.533 |
-| Random forest | 0.787 | 0.604 | 0.175 | 0.727 | 0.833 | 0.111 |
-
-The logistic regression model was selected as the candidate model because it had the strongest ROC-AUC and Brier score among the tested baselines, while remaining relatively interpretable.
-
-### Candidate Model at Default Threshold 0.50
+Held-out test set results:
 
 | Metric | Value |
 |---|---:|
-| ROC-AUC | 0.801 |
-| Average precision | 0.645 |
-| Brier score | 0.157 |
-| Accuracy | 0.783 |
-| Bad-risk precision | 0.676 |
-| Bad-risk recall | 0.533 |
-| False positives | 23 |
-| False negatives | 42 |
+| ROC AUC | 0.780 |
+| Average precision | 0.612 |
+| Brier score | 0.165 |
 
-At the default threshold, the model misses 42 out of 90 bad-risk cases in the test set. This is a material issue in a credit-risk context.
+Interpretation:
+
+- The model has reasonable ranking ability for a simple baseline.
+- Probability quality is acceptable for a portfolio case study, but not sufficient for production use without further validation.
+- The model should be treated as a candidate for governance review, not as a deployable credit model.
 
 ---
 
 ## 7. Threshold Selection
 
-The UCI dataset includes a cost-sensitive framing where misclassifying a bad credit risk as good is more costly than misclassifying a good credit risk as bad.
+The model predicts the probability of bad credit risk.
 
-For this project:
+Two thresholds were reviewed:
 
-- false positive cost = 1;
-- false negative cost = 5.
+| Threshold | Purpose |
+|---:|---|
+| `0.50` | Default classification threshold |
+| `0.16` | Cost-sensitive threshold selected on validation set |
 
-The selected threshold is **0.25**, based on the lowest expected misclassification cost among tested thresholds.
+The threshold was selected using the German Credit asymmetric cost assumption:
 
-| Threshold | Accuracy | Bad-risk precision | Bad-risk recall | False positives | False negatives | High-risk flag rate | Expected cost |
-|---:|---:|---:|---:|---:|---:|---:|---:|
-| 0.50 | 0.783 | 0.676 | 0.533 | 23 | 42 | 23.7% | 233 |
-| 0.25 | 0.713 | 0.514 | 0.811 | 69 | 17 | 47.3% | 154 |
+| Error type | Interpretation | Assumed cost |
+|---|---|---:|
+| False negative | Bad credit risk classified as good | 5 |
+| False positive | Good credit risk classified as bad | 1 |
 
-The 0.25 threshold reduces false negatives from 42 to 17, but increases false positives from 23 to 69. It also increases the high-risk/manual-review flag rate from 23.7% to 47.3%.
-
-This threshold should be treated as a governance decision, not a purely technical optimization.
-
----
-
-## 8. Fairness Review Summary
-
-Fairness analysis was performed at the selected threshold of 0.25.
-
-The model flags 47.3% of test applicants as bad risk / high risk.
-
-Largest observed gaps across eligible subgroup comparisons:
-
-| Metric | Largest observed gap | Feature | Groups |
-|---|---:|---|---|
-| High-risk flag rate | 0.372 | `property` | unknown / no property vs real estate |
-| False positive rate | 0.362 | `property` | unknown / no property vs real estate |
-| False negative rate | 0.258 | `property` | building society/life insurance vs unknown / no property |
-
-Important caveat: fairness metrics are calculated on a 300-row test set and should be treated as risk signals, not definitive evidence of discriminatory behaviour. Several subgroup results are unstable because subgroup sizes are below 20 observations.
+This makes threshold selection a governance-relevant decision, not just a technical parameter.
 
 ---
 
-## 9. Explainability Summary
+## 8. Threshold Impact
 
-Permutation importance identified the following top model drivers:
+Held-out test set comparison:
 
-| Rank | Feature | Interpretation |
-|---:|---|---|
-| 1 | `checking_account_status` | Liquidity / financial situation proxy |
-| 2 | `credit_history` | Past credit behaviour |
-| 3 | `duration_months` | Loan duration |
-| 4 | `purpose` | Loan purpose |
-| 5 | `credit_amount` | Credit exposure |
+| Threshold | High-risk flag rate | False positives | False negatives | Interpretation |
+|---:|---:|---:|---:|---|
+| `0.50` | 21.0% | 16 | 34 | Conservative flagging, but many bad-risk applicants missed |
+| `0.16` | 71.5% | 90 | 7 | Better bad-risk detection, but high customer-friction risk |
 
-Sensitive or proxy-sensitive variables with positive permutation importance include:
+The selected threshold substantially reduces missed bad-risk applicants. However, it also flags a very large share of applicants as high risk.
 
-- `housing`;
-- `personal_status_sex`;
-- `property`;
-- `age_years`;
-- `foreign_worker`.
+This is the main model governance finding.
 
-This does not automatically make the model invalid, but it creates a clear governance issue: these variables require explicit policy treatment before any real-world use.
-
-Logistic regression coefficients were also reviewed. They provide useful transparency, but they should not be interpreted causally or used directly as customer-facing reasons without business, legal and compliance review.
+The selected threshold should **not** be treated as a deployment recommendation without further review.
 
 ---
 
-## 10. Human Oversight Requirements
+## 9. Fairness and Subgroup Review
 
-The model should only be used with structured human oversight.
+Fairness testing was performed on:
 
-Minimum requirements:
+- gender group;
+- age group;
+- foreign worker status.
 
-| Control | Requirement |
+The fairness review found:
+
+| Finding | Severity |
 |---|---|
-| Human decision-maker | A credit officer remains responsible for the final decision |
-| No automatic rejection | A high-risk flag cannot automatically reject an application |
-| Override process | Credit officers can override the model, with reasons logged |
-| Explanation use | Explanations support review but do not replace credit policy |
-| Sensitive variables | Use must be reviewed by Compliance / Legal / Model Risk |
-| Adverse decisions | Final decision rationale must be based on approved credit policy, not only model score |
-| Escalation | Borderline and high-impact cases should be escalated for second-line review |
+| Cost-sensitive threshold creates high flagging rate | High |
+| Age-group disparity at default threshold | Medium |
+| Foreign-worker-status disparity at default threshold | Medium |
+| Age-group disparity at selected threshold | High |
+| Foreign-worker-status disparity at selected threshold | High |
+| Main model drivers require business and proxy review | Medium |
+
+Main interpretation:
+
+- No major gender disparity was identified in this test sample.
+- Age group triggered review findings, especially at the selected threshold.
+- Foreign worker status triggered high-priority review findings, but subgroup size is small, so results should be interpreted cautiously.
+- The selected threshold increases fairness and customer-impact concerns.
+
+These findings are review triggers, not legal conclusions.
 
 ---
 
-## 11. Monitoring Requirements
+## 10. Explainability Summary
 
-If this model were used in a controlled pilot, monitoring should include:
+Global explainability was assessed using permutation importance.
 
-| Area | Indicators |
-|---|---|
-| Performance | ROC-AUC, average precision, Brier score, confusion matrix |
-| Threshold stability | High-risk flag rate at selected threshold |
-| Fairness | Subgroup high-risk flag rate, false positive rate, false negative rate |
-| Data drift | Distribution changes in top model drivers |
-| Explainability | Stability of top feature importance rankings |
-| Human oversight | Override rates, manual review outcomes, policy exceptions |
-| Customer impact | Complaints, appeals, adverse decision patterns |
+Top model drivers:
 
-Monitoring should combine quantitative thresholds with expert review because the dataset is small and subgroup metrics can be unstable.
+| Feature | Importance |
+|---|---:|
+| `checking_status` | 0.0916 |
+| `credit_history` | 0.0322 |
+| `credit_amount` | 0.0307 |
+| `installment_commitment` | 0.0195 |
+| `duration` | 0.0179 |
+| `purpose` | 0.0150 |
+| `savings_status` | 0.0045 |
+| `foreign_worker` | 0.0040 |
+
+Interpretation:
+
+- Most top drivers are broadly credit-relevant.
+- `foreign_worker` appears among the top features and should be reviewed as a proxy-sensitive variable.
+- Feature relevance should be reviewed with credit risk, legal/compliance and business stakeholders before any operational use.
+- Explainability evidence supports further review, not deployment approval.
 
 ---
 
-## 12. Key Risks and Limitations
+## 11. Main Risks
 
-| Risk | Description | Mitigation |
+| Risk | Description | Severity |
 |---|---|---|
-| Dataset age | Historical dataset may not reflect modern credit practices | Treat as portfolio simulation only |
-| Small sample size | Fairness and subgroup metrics are unstable | Use results as risk signals, not conclusions |
-| Sensitive/proxy variables | Several variables may raise fairness or legal concerns | Require explicit policy and legal review |
-| Threshold impact | Lower threshold reduces false negatives but increases customer friction | Require governance approval of threshold |
-| Limited monitoring evidence | No timestamps, overrides, complaints or longitudinal outcomes | Monitoring plan remains scenario-based |
-| Explainability limits | Coefficients and permutation importance are not causal explanations | Use explanations as internal decision support only |
-| Regulatory incompleteness | Analysis is not a full conformity or compliance assessment | Document as portfolio simulation |
+| High customer-friction risk | The selected threshold flags 71.5% of applicants as high risk | High |
+| False positive burden | Many good-risk applicants are incorrectly flagged at the selected threshold | High |
+| Age-group disparity | Age-group outcomes differ materially under the selected threshold | High |
+| Foreign-worker-status review trigger | Foreign worker status shows disparity signals, with small subgroup size | High |
+| Proxy-sensitive feature use | `foreign_worker` appears among the top model drivers | Medium |
+| Dataset limitation | German Credit is small, dated and not representative of a modern banking portfolio | High |
+| Overreliance risk | Users could treat the model score as a decision rather than decision support | High |
 
 ---
 
-## 13. Approval Position
+## 12. Required Controls Before Any Operational Use
 
-For this simulated project, the model would be classified as:
+The model should not be used for automated rejection.
 
-**Not approved for production use.**
+Minimum controls before any controlled pilot:
 
-Potentially acceptable only as:
-
-- an educational Responsible AI case study;
-- a controlled internal prototype;
-- a decision-support pilot subject to additional validation;
-- an example for model governance documentation.
-
-Before any real deployment, the following would be required:
-
-- legal basis and use-case classification;
-- independent model validation;
-- representative and current training data;
-- full fairness assessment;
-- calibration review;
-- production monitoring design;
-- human oversight procedure;
-- customer communication review;
-- model risk approval.
+| Control | Purpose |
+|---|---|
+| Human review | Prevent direct adverse decisions based only on model output |
+| Threshold review | Assess whether threshold `0.16` is operationally acceptable |
+| Subgroup monitoring | Track outcomes and error rates by relevant groups |
+| Feature review | Assess sensitive and proxy-sensitive variables |
+| Reason-code review | Ensure explanations are meaningful and appropriate |
+| Manual override process | Allow credit officers to challenge model output |
+| Periodic reassessment | Re-test performance, calibration and fairness over time |
+| Documentation | Maintain model card, testing summary and risk-control evidence |
 
 ---
 
-## 14. References
+## 13. Recommended Use Decision
 
-This model card structure is aligned with common model card practice: intended use, data, evaluation, ethical considerations, limitations and recommendations. It also reflects practical risk-management concepts from NIST AI RMF and high-impact AI governance expectations under the EU AI Act.
+Recommended status:
+
+```text
+Approve for controlled testing only.
+Do not approve for fully automated rejection.
+```
+
+Rationale:
+
+- The model has reasonable baseline performance.
+- The selected threshold reduces missed bad-risk applicants.
+- However, the selected threshold creates high customer-friction risk.
+- Fairness review identifies age-group and foreign-worker-status review triggers.
+- Proxy-sensitive features require further review.
+- The dataset is not sufficient for production-grade validation.
+
+The model is suitable for demonstrating Responsible AI review and governance controls, not for production use.
+
+---
+
+## 14. Limitations
+
+Main limitations:
+
+- The dataset is small and dated.
+- The dataset does not represent a modern European banking portfolio.
+- Subgroup attributes are limited and imperfect.
+- Some subgroup results are unstable due to small sample size.
+- The cost matrix is simplified.
+- The model is trained on public data, not real institutional credit data.
+- No out-of-time validation was performed.
+- No production monitoring was implemented.
+- Fairness findings are illustrative, not legal conclusions.
+
+---
+
+## 15. Open Questions
+
+Before any real-world use, the following questions would need to be answered:
+
+1. Is the cost assumption appropriate for the institution’s actual credit risk appetite?
+2. Is threshold `0.16` operationally feasible given the high flagging rate?
+3. Are age-related outcome differences acceptable under applicable policy and law?
+4. Should `foreign_worker` be excluded, transformed or subject to stricter review?
+5. Can credit officers receive usable explanations for adverse or borderline cases?
+6. What monitoring thresholds should trigger model review or suspension?
+7. How should applicants contest or challenge adverse outcomes influenced by the model?
+
+---
+
+## 16. Conclusion
+
+The candidate model is a useful baseline for Responsible AI review.
+
+It demonstrates how a simple credit risk model can be assessed beyond standard performance metrics. The key issue is not whether the model has acceptable ROC AUC. The key issue is how threshold choice changes customer impact, fairness risk and operational workload.
+
+The model should proceed only as a controlled decision-support candidate, with human review, threshold governance, subgroup monitoring and proxy-sensitive feature review.
